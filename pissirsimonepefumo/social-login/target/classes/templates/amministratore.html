@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <title>Area Dell' Amministratore</title>
+  <style>
+    body{
+      background-color: rgba(252, 252, 252, 0.614);
+    }
+    .agg{
+      border-collapse: collapse;
+    width: 90%;
+    margin:auto;
+    }
+
+    table {
+    border-collapse: collapse;
+    width: 90%;
+    margin:auto;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  th {
+    background-color: #f2f2f2;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  h1 {
+    text-align: center;
+  }
+  
+  .btnLogout {
+    background-color: #ba280e
+  }
+
+  button {
+    background-color: yellow
+  }
+
+  </style>
+
+ 
+</head>
+
+<body>
+
+
+  <script>   
+
+
+
+    window.addEventListener('DOMContentLoaded', function() {
+      var nameElement = document.getElementById('nameElement');
+      if (nameElement.textContent == "null") {
+        window.location.href = '/login';
+      }
+    });
+
+
+    
+    function addParking(event) {
+      event.preventDefault();
+      const addForm = document.getElementById('add-form');
+     // var NomeParcheggio = addForm.elements['nome'].value;
+      var NomeParcheggio = document.querySelector('input[name="NomeParcheggio"]').value;
+     // var numPostiTot = addForm.elements['postiTot'].value;
+      var numPostiTot = parseInt(document.querySelector('input[name="postiTotali"]').value);
+     // var numPostiDisponibili = addForm.elements['postiDisponibili'].value;
+      var numPostiDisponibili = parseInt(document.querySelector('input[name="postiDisponibili"]').value);
+    //  var isOpen = addForm.elements['isOpen'].value;
+     
+
+      if (numPostiTot <= numPostiDisponibili) {
+        alert("Il numero di posti totali deve essere maggiore del numero di posti disponibili.");
+        return; 
+      }
+
+      var newParking = {
+          NomeParcheggio: NomeParcheggio,
+          numPostiTot: numPostiTot,
+          numPostiDisponibili: numPostiDisponibili,
+          
+      };
+      
+      fetch('/admin/api/parkings', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newParking)
+      })
+      .then(response => {
+        console.log(response);
+          if (response.ok) {
+            console.log('\n\nParcheggio aggiunto con successo!');
+            location.reload(); 
+            document.getElementById("addParkingForm").reload();
+            
+
+          } else {
+              throw new Error('\n\nErrore durante l\'aggiunta del parcheggio.');
+          }
+      })
+    }
+    
+
+
+    function fetchParkings() {
+      fetch('/admin/api/parkings')
+      .then(response => response.json())
+      .then(data => {
+        // rimuovo tutte le righe esistenti
+        const tableBody = document.getElementById("parkingTableBody");
+        tableBody.innerHTML = "";
+        // riga per ogni parcheggio
+        data.forEach(parcheggio => {
+          const newRow = tableBody.insertRow();
+
+          const cellIdParcheggio = newRow.insertCell();
+          cellIdParcheggio.textContent = parcheggio.idParcheggio;
+          var idP = parcheggio.idParcheggio;
+
+          const cellNomeParcheggio = newRow.insertCell();
+          cellNomeParcheggio.textContent = parcheggio.NomeParcheggio;
+
+          const cellPostiTot = newRow.insertCell();
+          cellPostiTot.textContent = parseInt(parcheggio.numPostiTot);
+
+          const cellPostiDisponibili = newRow.insertCell();
+          cellPostiDisponibili.textContent = parseInt(parcheggio.numPostiDisponibili);
+
+          const cellAperto = newRow.insertCell();
+          var statoParc = ""
+          if(parcheggio.isOpen==1) {
+            statoParc="APERTO";
+          } 
+          else {
+            statoParc="CHIUSO";
+          }
+          cellAperto.textContent = statoParc;
+
+          const cellRimuovi = newRow.insertCell();
+          const btnDel = document.createElement('button');
+          btnDel.textContent = 'RIMUOVI';
+          btnDel.classList.add('btnDel');
+          btnDel.onclick = function() {
+            deleteParking(parcheggio.idParcheggio);
+          };
+          cellRimuovi.appendChild(btnDel);
+
+          const cellModifica = newRow.insertCell();
+          const btnMod = document.createElement('button');
+          btnMod.textContent = 'ATTIVA/DISATTIVA';
+          btnMod.classList.add('btnMod');
+          btnMod.onclick = function() {
+            updateParking(parcheggio.idParcheggio);
+          }
+          cellModifica.appendChild(btnMod);
+        });
+      })
+      .catch(error => {
+        console.error('Errore durante la richiesta:', error);
+      });
+    }
+    fetchParkings();
+
+
+
+    function deleteParking(idParcheggio) {
+      fetch('/admin/api/parkings/' + idParcheggio, {
+        method: 'DELETE'
+      })
+      .then(response => {
+        if (response.ok) {
+          console.log('Parcheggio eliminato con successo!');
+          location.reload(); 
+        } else {
+          throw new Error('Errore durante eliminazione del parcheggio.');
+        }
+      })
+      .catch(error => {
+        console.error('Errore durante la richiesta:', error);
+      });
+    }
+    
+    
+    
+
+    
+    function updateParking(idParcheggio) {
+      fetch('/admin/api/parkings/' + idParcheggio, {
+        method: 'PUT',
+        headers: {
+              'Content-Type': 'application/json'
+          }
+      })
+      .then(response => {
+        if (response.ok) {
+          console.log('Parcheggio modificato con successo!');
+          location.reload(); 
+        } 
+        else {
+          throw new Error('Errore durante la modifica del parcheggio.');
+        }
+      })
+      .catch(error => {
+        console.error('Errore durante la richiesta:', error);
+      });
+    } 
+
+    
+    window.fbAsyncInit = function() {
+    FB.init({
+      appId: '3458840611050196',
+      cookie: true,
+      xfbml: true,
+      version: 'v13.0'
+      });
+    };
+
+
+    function logout() {
+      window.location.replace('/');
+    }  
+
+
+  </script>
+
+  <div id="nameElement"></div>
+  <button class="btnLogout" onclick="logout()">Logout</button>
+  
+  <h1 id="admin">Area Dell' Amministratore</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID Parcheggio</th>
+        <th>Nome Parcheggio</th>
+        <th>Posti Totali</th>
+        <th>Posti disponibili</th>
+        <th>Stato</th>
+        <th>Elimina Parcheggio</th>
+        <th>Modifica Stato</th>
+      </tr>
+    </thead>
+    <tbody id="parkingTableBody">
+      <!-- Righe dei parcheggi dinamiche -->
+      
+    </tbody>
+  </table>
+  <div class="agg">
+  <h3>Aggiungi un parcheggio</h3>
+  <form role="form" id="add-form" onsubmit="addParking(event)">
+    <input type="text" name="NomeParcheggio" placeholder="Nome Parcheggio" class='form-control' id="nome" required>
+    <input type="number" name="postiTotali" placeholder="Posti Totali" min="0" class='form-control' id="postiTot" required>
+    <input type="number" name="postiDisponibili" placeholder="Posti disponibili" min="0" class='form-control' id="postiDisponibili" required>
+    <input type="hidden" id="newParkingId">
+    <button type="submit" class="btn-salva">Salva</button>
+</form>
+</div>
+
+
+</body>
+</html>

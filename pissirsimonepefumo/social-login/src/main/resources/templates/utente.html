@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User</title>
+  <style>
+    body{
+      background-color: rgba(251, 246, 246, 0.639);
+    }
+
+    table {
+    
+    width: 90%;
+    margin:auto;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #f20808;
+  }
+  
+  th {
+    background-color: #f2f2f2;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  h1 {
+    text-align: center;
+  }
+  
+  .btnAmm {
+    display: flex;
+    padding: 10px 20px;
+    background-color: #f2f2f2;
+    color: #333;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-weight: bold;
+    text-align: end;
+  }
+  
+  </style>
+</head>
+
+<body>
+  <div>
+    <a href="/secured" class="btnAmm">Vai alla pagina degli Amministratori</a>
+  </div>
+  <h1>Utente</h1>
+  <table >
+    <thead>
+      <tr>
+        <th>ID Parcheggio</th>
+        <th>Nome Parcheggio</th>
+        <th>Posti Totali</th>
+        <th>Posti disponibili</th>
+        <th>Stato</th>
+      </tr>
+    </thead>
+    <tbody id="parkingTableBody">
+      <!-- Righe dei parcheggi saranno generate dinamicamente qui -->
+      
+    </tbody>
+  </table>
+
+</body>
+<script>
+    
+  
+    function fetchParkings() {
+      fetch('/user/api/parkings')
+      .then(response => response.json())
+      .then(data => {
+        // rimuovo tutte le righe esistenti
+        const tableBody = document.getElementById("parkingTableBody");
+        tableBody.innerHTML = "";
+        // riga per ogni parcheggio
+        data.forEach(parcheggio => {
+          const newRow = tableBody.insertRow();
+
+          const cellIdParcheggio = newRow.insertCell();
+          cellIdParcheggio.textContent = parcheggio.idParcheggio;
+          var idP = parcheggio.idParcheggio;
+
+          const cellNomeParcheggio = newRow.insertCell();
+          cellNomeParcheggio.textContent = parcheggio.NomeParcheggio;
+
+          const cellPostiTot = newRow.insertCell();
+          cellPostiTot.textContent = parseInt(parcheggio.numPostiTot);
+
+          const cellPostiDisponibili = newRow.insertCell();
+          cellPostiDisponibili.textContent = parseInt(parcheggio.numPostiDisponibili);
+
+          const cellAperto = newRow.insertCell();
+          var statoParc = ""
+          if(parcheggio.isOpen==1) {
+            statoParc="APERTO";
+          } 
+          else {
+            statoParc="CHIUSO";
+          }
+          cellAperto.textContent = statoParc;
+        });
+      })
+      .catch(error => {
+        console.error('Errore durante la richiesta:', error);
+      });
+    }
+    fetchParkings();
+</script>
+</html>
